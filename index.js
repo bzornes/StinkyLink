@@ -8,6 +8,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Debug: log loaded env vars (temporarily)
+console.log("✅ OPENAI KEY:", process.env.OPENAI_API_KEY ? 'Loaded' : 'Missing');
+console.log("✅ PRIVATE KEY:", process.env.PRIVATE_KEY ? 'Loaded' : 'Missing');
+console.log("✅ NFT STORAGE:", process.env.NFT_STORAGE_KEY ? 'Loaded' : 'Missing');
+
 // Route handler for uploading memes
 app.use('/api', mintRoutes);
 
@@ -19,5 +24,5 @@ app.get('/', (req, res) => {
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🧼 Server running on port ${PORT}`);
+  console.log(`⚡ Server running on port ${PORT}`);
 });
