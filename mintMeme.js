@@ -4,26 +4,32 @@ const multer = require('multer');
 const fs = require('fs');
 const FormData = require('form-data');
 const axios = require('axios');
+
 const {
   Connection,
   Keypair,
   Transaction,
   PublicKey,
   sendAndConfirmTransaction,
-  SystemProgram
+  SystemProgram,
 } = require('@solana/web3.js');
+
 const {
   createMint,
   getOrCreateAssociatedTokenAccount,
-  mintTo
+  mintTo,
 } = require('@solana/spl-token');
-const { OpenAI } = require('openai');
 
+const { OpenAI } = require('openai');
 const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+if (!process.env.OPENAI_API_KEY) {
+  console.error("❌ OPENAI_API_KEY not found in environment.");
+  process.exit(1);
+}
 
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const connection = new Connection(process.env.HELLIS_URL, 'confirmed');
 const secretKey = Uint8Array.from(JSON.parse(process.env.PRIVATE_KEY));
 const keypair = Keypair.fromSecretKey(secretKey);
@@ -64,11 +70,11 @@ router.post('/mint-meme', upload.single('image'), async (req, res) => {
     const tokenAccount = await getOrCreateAssociatedTokenAccount(connection, keypair, mint, keypair.publicKey);
     await mintTo(connection, keypair, mint, tokenAccount.address, keypair.publicKey, 1);
 
-    const memo = `🧻 Meme: ${caption} 🖼️ ${imageUrl}`;
+    const memo = `🔥 Meme: ${caption} 🖼️ ${imageUrl}`;
     const memoTx = {
       keys: [],
       programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
-      data: Buffer.from(memo)
+      data: Buffer.from(memo),
     };
 
     const tx = new Transaction().add(memoTx);
