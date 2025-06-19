@@ -34,7 +34,7 @@ async function uploadToIPFS(filePath) {
 
   const res = await axios.post('https://api.nft.storage/upload', form, {
     headers: {
-      Authorization: \`Bearer \${process.env.NFT_STORAGE_KEY}\`,
+      Authorization: `Bearer ${process.env.NFT_STORAGE_KEY}`,
       ...form.getHeaders()
     }
   });
@@ -47,7 +47,7 @@ async function generateCaption(imageName) {
     model: 'gpt-4',
     messages: [
       { role: 'system', content: 'You are a sarcastic meme caption generator.' },
-      { role: 'user', content: \`Write a chaotic crypto meme caption for image: \${imageName}\` }
+      { role: 'user', content: `Write a chaotic crypto meme caption for image: ${imageName}` }
     ]
   });
 
@@ -64,14 +64,14 @@ router.post('/mint-meme', upload.single('image'), async (req, res) => {
     const tokenAccount = await getOrCreateAssociatedTokenAccount(connection, keypair, mint, keypair.publicKey);
     await mintTo(connection, keypair, mint, tokenAccount.address, keypair.publicKey, 1);
 
-    const memo = \`💭 Meme: \${caption} | 📸 \${imageUrl}\`;
-    const memoIx = {
+    const memo = `🧻 Meme: ${caption} 🖼️ ${imageUrl}`;
+    const memoTx = {
       keys: [],
-      programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
       data: Buffer.from(memo)
     };
 
-    const tx = new Transaction().add(memoIx);
+    const tx = new Transaction().add(memoTx);
     tx.feePayer = keypair.publicKey;
     tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     const signature = await sendAndConfirmTransaction(connection, tx, [keypair]);
@@ -79,7 +79,7 @@ router.post('/mint-meme', upload.single('image'), async (req, res) => {
     fs.unlinkSync(imagePath);
     res.json({ success: true, signature });
   } catch (err) {
-    console.error('Mint Failed:', err.message || err);
+    console.error('Mint failed:', err.message || err);
     res.status(500).json({ success: false, error: err.message || 'Unknown error' });
   }
 });
