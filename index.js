@@ -1,28 +1,27 @@
 require('dotenv').config();
+console.log("Loaded env:", {
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  HELIUS_URL: process.env.HELLIS_URL,
+  NFT_STORAGE_KEY: process.env.NFT_STORAGE_KEY,
+  PRIVATE_KEY: process.env.PRIVATE_KEY ? 'Exists' : 'Missing'
+});
+
 const express = require('express');
 const cors = require('cors');
 const mintRoutes = require('./mintMeme');
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-// Debug: log loaded env vars (temporarily)
-console.log("✅ OPENAI KEY:", process.env.OPENAI_API_KEY ? 'Loaded' : 'Missing');
-console.log("✅ PRIVATE KEY:", process.env.PRIVATE_KEY ? 'Loaded' : 'Missing');
-console.log("✅ NFT STORAGE:", process.env.NFT_STORAGE_KEY ? 'Loaded' : 'Missing');
-
-// Route handler for uploading memes
-app.use('/api', mintRoutes);
-
-// Add a test route so GET requests don't fail
+// Route to test if env vars are loaded
 app.get('/', (req, res) => {
-  res.send('🚀 Stinky backend is up and running!');
+  res.send(`✅ Backend is running. OpenAI Key: ${process.env.OPENAI_API_KEY ? '✔️' : '❌ Missing'}`);
 });
 
-// Start the server
-const PORT = process.env.PORT || 5000;
+app.use('/api', mintRoutes);
+
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`⚡ Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
