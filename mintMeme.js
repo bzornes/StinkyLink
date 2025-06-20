@@ -4,7 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const FormData = require('form-data');
 const axios = require('axios');
-const bs58 = require('bs58');
+const bs58Decode = require('bs58');
 
 const {
   Connection,
@@ -36,7 +36,7 @@ try {
   const parsed = JSON.parse(process.env.PRIVATE_KEY);
   secretKey = Uint8Array.from(parsed);
 } catch {
-  secretKey = bs58.decode(process.env.PRIVATE_KEY);
+  secretKey = bs58Decode(process.env.PRIVATE_KEY);
 }
 const keypair = Keypair.fromSecretKey(secretKey);
 
