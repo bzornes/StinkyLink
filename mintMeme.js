@@ -25,11 +25,11 @@ const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
 
 if (!process.env.OPENAI_API_KEY) {
-  console.error("❌ OPENAI_API_KEY not found in environment.");
+  console.error('❌ OPENAI_API_KEY not found in environment.');
   process.exit(1);
 }
 
-// ✅ Handle base58 or JSON array format for PRIVATE_KEY
+// Handle PRIVATE_KEY from either JSON array or base58 string
 let secretKey;
 try {
   const parsed = JSON.parse(process.env.PRIVATE_KEY);
@@ -50,8 +50,8 @@ async function uploadToIPFS(filePath) {
   const res = await axios.post('https://api.nft.storage/upload', form, {
     headers: {
       Authorization: `Bearer ${process.env.NFT_STORAGE_KEY}`,
-      ...form.getHeaders()
-    }
+      ...form.getHeaders(),
+    },
   });
 
   return res.data.value.url;
@@ -62,8 +62,8 @@ async function generateCaption(imageName) {
     model: 'gpt-4',
     messages: [
       { role: 'system', content: 'You are a sarcastic meme caption generator.' },
-      { role: 'user', content: `Write a chaotic crypto meme caption for image: ${imageName}` }
-    ]
+      { role: 'user', content: `Write a chaotic crypto meme caption for image: ${imageName}` },
+    ],
   });
 
   return res.choices[0].message.content.trim();
@@ -77,7 +77,10 @@ router.post('/mint-meme', upload.single('image'), async (req, res) => {
 
     const mint = await createMint(connection, keypair, keypair.publicKey, null, 0);
     const tokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection, keypair, mint, keypair.publicKey
+      connection,
+      keypair,
+      mint,
+      keypair.publicKey
     );
 
     await mintTo(connection, keypair, mint, tokenAccount.address, keypair.publicKey, 1);
@@ -85,13 +88,14 @@ router.post('/mint-meme', upload.single('image'), async (req, res) => {
     const memo = `🔥 Meme: ${caption} 🖼️ ${imageUrl}`;
     const memoTx = {
       keys: [],
-      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
       data: Buffer.from(memo),
     };
 
     const tx = new Transaction().add(memoTx);
     tx.feePayer = keypair.publicKey;
     tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
     const signature = await sendAndConfirmTransaction(connection, tx, [keypair]);
 
     fs.unlinkSync(imagePath);
