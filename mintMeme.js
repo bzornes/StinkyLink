@@ -4,6 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const FormData = require('form-data');
 const axios = require('axios');
+const bs58 = require('bs58');
 
 const {
   Connection,
@@ -29,13 +30,12 @@ if (!process.env.OPENAI_API_KEY) {
   process.exit(1);
 }
 
-// Handle PRIVATE_KEY from either JSON array or base58 string
+// Handle base58 or JSON array format for PRIVATE_KEY
 let secretKey;
 try {
   const parsed = JSON.parse(process.env.PRIVATE_KEY);
   secretKey = Uint8Array.from(parsed);
 } catch {
-  const bs58 = require('bs58');
   secretKey = bs58.decode(process.env.PRIVATE_KEY);
 }
 const keypair = Keypair.fromSecretKey(secretKey);
@@ -62,8 +62,8 @@ async function generateCaption(imageName) {
     model: 'gpt-4',
     messages: [
       { role: 'system', content: 'You are a sarcastic meme caption generator.' },
-      { role: 'user', content: `Write a chaotic crypto meme caption for image: ${imageName}` },
-    ],
+      { role: 'user', content: `Write a chaotic crypto meme caption for image: ${imageName}` }
+    ]
   });
 
   return res.choices[0].message.content.trim();
@@ -82,20 +82,18 @@ router.post('/mint-meme', upload.single('image'), async (req, res) => {
       mint,
       keypair.publicKey
     );
-
     await mintTo(connection, keypair, mint, tokenAccount.address, keypair.publicKey, 1);
 
     const memo = `🔥 Meme: ${caption} 🖼️ ${imageUrl}`;
     const memoTx = {
       keys: [],
-      programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
       data: Buffer.from(memo),
     };
 
     const tx = new Transaction().add(memoTx);
     tx.feePayer = keypair.publicKey;
     tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-
     const signature = await sendAndConfirmTransaction(connection, tx, [keypair]);
 
     fs.unlinkSync(imagePath);
