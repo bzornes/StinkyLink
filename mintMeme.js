@@ -29,10 +29,19 @@ if (!process.env.OPENAI_API_KEY) {
   process.exit(1);
 }
 
+// ✅ Handle base58 or JSON array format for PRIVATE_KEY
+let secretKey;
+try {
+  const parsed = JSON.parse(process.env.PRIVATE_KEY);
+  secretKey = Uint8Array.from(parsed);
+} catch {
+  const bs58 = require('bs58');
+  secretKey = bs58.decode(process.env.PRIVATE_KEY);
+}
+const keypair = Keypair.fromSecretKey(secretKey);
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const connection = new Connection(process.env.HELLIS_URL, 'confirmed');
-const secretKey = Uint8Array.from(JSON.parse(process.env.PRIVATE_KEY));
-const keypair = Keypair.fromSecretKey(secretKey);
 
 async function uploadToIPFS(filePath) {
   const form = new FormData();
@@ -67,7 +76,10 @@ router.post('/mint-meme', upload.single('image'), async (req, res) => {
     const caption = await generateCaption(req.file.originalname);
 
     const mint = await createMint(connection, keypair, keypair.publicKey, null, 0);
-    const tokenAccount = await getOrCreateAssociatedTokenAccount(connection, keypair, mint, keypair.publicKey);
+    const tokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection, keypair, mint, keypair.publicKey
+    );
+
     await mintTo(connection, keypair, mint, tokenAccount.address, keypair.publicKey, 1);
 
     const memo = `🔥 Meme: ${caption} 🖼️ ${imageUrl}`;
